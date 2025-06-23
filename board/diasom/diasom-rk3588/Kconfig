@@ -1,0 +1,12 @@
+if TARGET_DIASOM_RK3588
+
+config SYS_BOARD
+	default "diasom-rk3588"
+
+config SYS_VENDOR
+	default "diasom"
+
+config SYS_CONFIG_NAME
+	default "diasom-rk3588"
+
+endif
