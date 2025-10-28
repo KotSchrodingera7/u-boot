@@ -12,6 +12,7 @@
 	compatible = "diasom,rk3588-btb", "rockchip,rk3588";
 
 	aliases {
+		ethernet0 = &gmac0;
 		mmc0 = &sdhci;
 		mmc1 = &sdmmc;
 		mmc2 = &sdio;
@@ -71,6 +72,16 @@
 		regulator-max-microvolt = <5000000>;
 	};
 
+	vcc_1v8_sys: vcc-1v8_sys-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_1v8_sys";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		vin-supply = <&vcc5v0_sys>;
+	};
+
 	vcc_1v1_nldo_s3: regulator-vcc-1v1-nldo-s3 {
 		compatible = "regulator-fixed";
 		regulator-name = "vcc_1v1_nldo_s3";
@@ -124,6 +135,25 @@
 
 &cpu_l3 {
 	cpu-supply = <&vdd_cpu_lit_s0>;
+};
+
+&gmac0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&gmac0_miim &gmac0_tx_bus2 &gmac0_rx_bus2
+		     &gmac0_rgmii_clk &gmac0_rgmii_bus &eth0_pins>;
+
+	snps,reset-gpio = <&gpio0 RK_PC6 GPIO_ACTIVE_LOW>;
+	snps,reset-active-low;
+	/* Reset time is 20ms, 100ms for rtl8211f */
+	snps,reset-delays-us = <0 20000 100000>;
+
+	clock_in_out = "output";
+	phy-handle = <&rgmii_phy0>;
+	phy-mode = "rgmii-rxid";
+	tx_delay = <0x43>;
+	nvmem-cells = <&mac1>;
+	nvmem-cell-names = "mac-address";
+	status = "okay";
 };
 
 &gpu {
@@ -191,11 +221,89 @@
 	};
 };
 
+
+&i2c7 {
+	status = "okay";
+	clock-frequency = <100000>;
+
+	/* 24aa025e48 */
+	eeprom@50 {
+		compatible = "atmel,24c02";
+		reg = <0x50>;
+		pagesize = <16>;
+		vcc-supply = <&vcc_1v8_sys>;
+
+		nvmem-layout {
+			compatible = "fixed-layout";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			mac1: mac-address@fa {
+				reg = <0xfa 0x06>;
+				read-only;
+			};
+		};
+	};
+
+	/* 24aa025e48 */
+	eeprom@51 {
+		compatible = "atmel,24c02";
+		reg = <0x51>;
+		pagesize = <16>;
+		vcc-supply = <&vcc_1v8_sys>;
+
+		nvmem-layout {
+			compatible = "fixed-layout";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			mac2: mac-address@fa {
+				reg = <0xfa 0x06>;
+				read-only;
+			};
+		};
+	};
+
+	/* 24aa025e48 */
+	eeprom@52 {
+		compatible = "atmel,24c02";
+		reg = <0x52>;
+		pagesize = <16>;
+		vcc-supply = <&vcc_1v8_sys>;
+
+		nvmem-layout {
+			compatible = "fixed-layout";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			mac3: mac-address@fa {
+				reg = <0xfa 0x06>;
+				read-only;
+			};
+		};
+	};
+};
+
+&mdio0 {
+	rgmii_phy0: phy@0 {
+		compatible = "ethernet-phy-id001c.c916",
+			     "ethernet-phy-ieee802.3-c22";
+		reg = <0x0>;
+	};
+};
+
 &pinctrl {
 	leds {
 		leds_som_pins: leds-som-pins {
 			rockchip,pins =
 				<0 RK_PA0 RK_FUNC_GPIO &pcfg_pull_none>;	/* VD2 */
+		};
+	};
+
+	gpio {
+		gpio_preload: gpio-preload {
+			rockchip,pins = 
+				<3 RK_PD5 RK_FUNC_GPIO &pcfg_pull_down>;	/* GPIO_EXP_RESET */
 		};
 	};
 
