@@ -9,6 +9,11 @@
 #include <env.h>
 #include <i2c.h>
 #include <stdlib.h>
+#include <extension_board.h>
+#include <dm/device.h>
+#include <dm/uclass.h>
+#include <dm/uclass-internal.h>
+
 
 #define BOARD_NAME "Diasom RK3588"
 static int rk3588_detect_gpio_smark(void)
@@ -58,13 +63,42 @@ static int rk3588_detect_gpio_expandex(void)
 	return 0;
 }
 
+static int rk3588_detect_hat(void)
+{
+	int ret;
+	struct udevice *dev;
+	int bus_num = 1;
+	ret = i2c_get_chip_for_busnum(bus_num, 0x08, 1, &dev);
+	if (ret) {
+		printf("%s: Cannot find udev for a bus %d\n", BOARD_NAME, bus_num);
+		return 1;
+	}
+
+	printf("%s: Find udev for a bus %d\n", BOARD_NAME, bus_num);
+	return 0;
+}
+
 
 int rk_board_late_init(void)
 {
 	int ret;
+	const char *boot_device;
+	struct udevice *dev;
+	char devnum_str[16];
+
+	boot_device = ofnode_read_chosen_string("u-boot,spl-boot-device");
+	if (boot_device) {
+		printf("%s: booted from %s\n", BOARD_NAME, boot_device);
+
+		if (!uclass_find_device_by_ofnode(UCLASS_MMC, ofnode_path(boot_device), &dev)) {
+			snprintf(devnum_str, sizeof(devnum_str), "%d", dev_seq(dev));
+			env_set("devnum", devnum_str);
+			printf("%s: selected mmc devnum=%s\n", BOARD_NAME, devnum_str);
+		}
+	}
+
 	ret = rk3588_detect_gpio_smark();
-	if( !ret ) 
-	{
+	if( !ret ) {
 		env_set("variant", "-smark");
 		env_set("fdt_board", "");
 		printf("%s: Detect version of smark\n", BOARD_NAME);		
@@ -81,6 +115,13 @@ int rk_board_late_init(void)
 		env_set("fdt_board", "");
 		printf("%s: Detect version 2\n", BOARD_NAME);
 	}
+
+	ret = rk3588_detect_hat();
+	if( !ret )
+	{
+		env_set("dtoverlay", "rk3588-diasom-btb-evb-hat.dtbo");
+	}
+	
 	return 0;
 }
 
