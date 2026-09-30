@@ -34,17 +34,19 @@
 	"kernel_comp_size=0x8000000\0"
 
 
-#define ENV_BOOTARGS_SETTINGS		\
-	"bootargs=root=PARTLABEL=rootfs earlycon rootwait drm.edid_firmware=HDMI-A-1:edid/display-edid.bin video=HDMI-A-1:1920x1080@60e\0"
+#define ENV_BOOTARGS_SETTINGS \
+    "bootargs_base=earlycon rootwait drm.edid_firmware=HDMI-A-1:edid/display-edid.bin video=HDMI-A-1:1920x1080@60e\0"
 
 #define CFG_EXTRA_ENV_SETTINGS \
 	ENV_MEM_LAYOUT_SETTINGS		\
 	ENV_BOOTARGS_SETTINGS \
 	"bootfile=Image\0" \
 	"bootpart=2\0" \
+	"rootpart=2\0" \
 	"loadkernel=load mmc ${devnum}:${bootpart} ${kernel_addr_r} /boot/${bootfile}\0" \
 	"loadfdt=load mmc ${devnum}:${bootpart} ${fdt_addr_r} /boot/${fdtfile}\0" \
 	"loadoverlay=load mmc ${devnum}:${bootpart} ${fdtoverlay_addr_r} /boot/${dtoverlay}\0" \
+	"setroot=setenv bootargs \"root=/dev/mmcblk${devnum}p2 ${bootargs_base}\"\0" \
 	"apply_overlay=" \
 		"if test -n \"${dtoverlay}\"; then " \
 			"echo Applying overlay ${dtoverlay}; " \
@@ -53,7 +55,7 @@
 			"fdt resize 8192; " \
 			"fdt apply ${fdtoverlay_addr_r}; " \
 		"fi\0" \
-	"myboot=run loadkernel; run loadfdt; run apply_overlay; booti ${kernel_addr_r} - ${fdt_addr_r}\0"
+	"myboot=run loadkernel; run loadfdt; run apply_overlay; run setroot; booti ${kernel_addr_r} - ${fdt_addr_r}\0"
 
 #define CONFIG_BOOTCOMMAND "run myboot"
 #endif /* __DIASOM_RK3588_H */
