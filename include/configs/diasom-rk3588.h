@@ -35,7 +35,7 @@
 
 
 #define ENV_BOOTARGS_SETTINGS		\
-	"bootargs=root=PARTLABEL=rootfs earlycon rootwait\0"
+	"bootargs=root=PARTLABEL=rootfs earlycon rootwait drm.edid_firmware=HDMI-A-1:edid/display-edid.bin video=HDMI-A-1:1920x1080@60e\0"
 
 #define CFG_EXTRA_ENV_SETTINGS \
 	ENV_MEM_LAYOUT_SETTINGS		\
