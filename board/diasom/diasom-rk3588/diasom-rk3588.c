@@ -85,17 +85,32 @@ int rk_board_late_init(void)
 	const char *boot_device;
 	struct udevice *dev;
 	char devnum_str[16];
+	/* emmc/sd: boot Linux only from that medium; spi/unknown: search */
+	const char *boot_source = "unknown";
 
 	boot_device = ofnode_read_chosen_string("u-boot,spl-boot-device");
 	if (boot_device) {
+		ofnode node = ofnode_path(boot_device);
+
 		printf("%s: booted from %s\n", BOARD_NAME, boot_device);
 
-		if (!uclass_find_device_by_ofnode(UCLASS_MMC, ofnode_path(boot_device), &dev)) {
-			snprintf(devnum_str, sizeof(devnum_str), "%d", dev_seq(dev));
+		if (!uclass_find_device_by_ofnode(UCLASS_MMC, node, &dev)) {
+			int seq = dev_seq(dev);
+
+			snprintf(devnum_str, sizeof(devnum_str), "%d", seq);
 			env_set("devnum", devnum_str);
 			printf("%s: selected mmc devnum=%s\n", BOARD_NAME, devnum_str);
+
+			if (seq == env_get_ulong("emmc_devnum", 10, 0))
+				boot_source = "emmc";
+			else if (seq == env_get_ulong("sd_devnum", 10, 1))
+				boot_source = "sd";
+		} else if (!uclass_find_device_by_ofnode(UCLASS_SPI_FLASH, node, &dev)) {
+			boot_source = "spi";
 		}
 	}
+	env_set("boot_source", boot_source);
+	printf("%s: boot_source=%s\n", BOARD_NAME, boot_source);
 
 	ret = rk3588_detect_gpio_smark();
 	if( !ret ) {

@@ -363,7 +363,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&fspim1_pins &fspim1_cs1>;
 
-	qspi_flash0: spi-flash@0 {
+	qspi_flash0: flash@0 {
 		#address-cells = <1>;
 		#size-cells = <0>;
 		compatible = "jedec,spi-nor";
