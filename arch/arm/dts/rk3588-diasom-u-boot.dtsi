@@ -2,7 +2,7 @@
 
 / {
 	chosen {
-		u-boot,spl-boot-order = &qspi_flash0, &sdmmc, &sdhci;
+		u-boot,spl-boot-order = "same-as-spl", &sdmmc, &sdhci;
 	};
 };
 
