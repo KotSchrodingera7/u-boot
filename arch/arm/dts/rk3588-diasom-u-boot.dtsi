@@ -1,0 +1,23 @@
+#include "rk3588-u-boot.dtsi"
+
+/ {
+	chosen {
+		u-boot,spl-boot-order = &qspi_flash0, &sdmmc, &sdhci;
+	};
+};
+
+&sfc {
+	bootph-pre-ram;
+};
+
+&qspi_flash0 {
+	bootph-pre-ram;
+};
+
+&fspim1_pins {
+	bootph-pre-ram;
+};
+
+&fspim1_cs1 {
+	bootph-pre-ram;
+};
